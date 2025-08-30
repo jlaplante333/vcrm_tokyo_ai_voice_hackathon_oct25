@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from .search import es_client, ensure_index, search_products, get_index_name, recent_products
+from .search import es_client, ensure_index, search_products, get_index_name, recent_products, count_products
 import json
 
 
@@ -23,6 +23,9 @@ def on_startup():
 def index(request: Request, q: str = ""):
     hits = []
     recent = []
+    # Precompute product count for dynamic placeholder
+    total_count = count_products()
+    placeholder_text = f"Search {total_count:,} nibbs" if total_count else "Search nibbs"
     if q.strip():
         hits = search_products(q)
     else:
@@ -36,6 +39,7 @@ def index(request: Request, q: str = ""):
             "hits_json": json.dumps(hits),
             "recent": recent,
             "q": q,
+            "placeholder_text": placeholder_text,
         },
     )
 

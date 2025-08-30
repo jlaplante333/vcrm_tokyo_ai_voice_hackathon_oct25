@@ -10,10 +10,10 @@
         <input
           type="search"
           name="q"
-          placeholder="Search nibbs"
+          placeholder="{{ placeholder_text }}"
           value=""
           autofocus
-          aria-label="Search nibbs"
+          aria-label="{{ placeholder_text }}"
           hx-get="/search"
           hx-target="#results"
           hx-trigger="input changed delay:250ms, search"
@@ -26,10 +26,10 @@
         <input
           type="search"
           name="q"
-          placeholder="Search nibbs"
+          placeholder="{{ placeholder_text }}"
           value="{{ q }}"
           autofocus
-          aria-label="Search nibbs"
+          aria-label="{{ placeholder_text }}"
           hx-get="/search"
           hx-target="#results"
           hx-trigger="input changed delay:250ms, search"

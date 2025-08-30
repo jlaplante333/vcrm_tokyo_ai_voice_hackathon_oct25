@@ -114,3 +114,12 @@ def recent_products(size: int = 200) -> List[Dict[str, Any]]:
         for h in response.get("hits", {}).get("hits", [])
     ]
     return hits
+
+
+def count_products() -> int:
+    index = get_index_name()
+    try:
+        resp = es_client.count(index=index, body={"query": {"match_all": {}}})
+        return int(resp.get("count", 0))
+    except Exception:
+        return 0
