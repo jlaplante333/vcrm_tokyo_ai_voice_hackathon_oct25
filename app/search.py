@@ -54,7 +54,8 @@ def ensure_index() -> None:
                         "url": {"type": "keyword", "index": False},
                         "image_url": {"type": "keyword", "index": False},
                         "source": {"type": "keyword"},
-                        "source_id": {"type": "keyword"}
+                        "source_id": {"type": "keyword"},
+                        "ingested_at": {"type": "date"}
                     }
                 },
             },
@@ -90,6 +91,26 @@ def search_products(query: str, size: int = 20) -> List[Dict[str, Any]]:
             "id": h.get("_id"),
             **h.get("_source", {})
         }
+        for h in response.get("hits", {}).get("hits", [])
+    ]
+    return hits
+
+
+def recent_products(size: int = 20) -> List[Dict[str, Any]]:
+    index = get_index_name()
+    response = es_client.search(
+        index=index,
+        body={
+            "query": {"match_all": {}},
+            "sort": [
+                {"ingested_at": {"order": "desc", "missing": "_last"}},
+                {"_id": {"order": "desc"}}
+            ],
+            "size": size,
+        },
+    )
+    hits = [
+        {"id": h.get("_id"), **h.get("_source", {})}
         for h in response.get("hits", {}).get("hits", [])
     ]
     return hits

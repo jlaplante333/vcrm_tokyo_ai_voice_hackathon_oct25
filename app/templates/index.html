@@ -41,4 +41,31 @@
   <section id="results" class="results" aria-live="polite">
     {% include "_results.html" with context %}
   </section>
+
+  {% if not q and recent and recent|length > 0 %}
+    <section class="recent">
+      <h2 class="section-title">Recently added</h2>
+      <ul class="result-list">
+        {% for item in recent %}
+          <li class="result-item">
+            {% if item.image_url %}
+              <img class="thumb" src="{{ item.image_url }}" alt="" />
+            {% endif %}
+            <div class="meta">
+              <h3 class="title"><a href="{{ item.url or '#' }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></h3>
+              {% if item.category %}
+                <div class="category">{{ item.category }}</div>
+              {% endif %}
+              {% if item.description %}
+                <p class="desc">{{ item.description }}</p>
+              {% endif %}
+              {% if item.price is not none %}
+                <div class="price">${{ '%.2f'|format(item.price) }}</div>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 {% endblock %}

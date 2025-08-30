@@ -64,3 +64,9 @@ This prototype can be extended with several features:
   - Authentication
   - Saved searches and favorites
 
+## Data Sources
+
+This project uses publicly available datasets for demonstration and testing purposes. Please review and comply with each dataset's license and terms of use before redistributing or using the data commercially.
+
+- Amazon Products Dataset 2023 (1.4M products): https://www.kaggle.com/datasets/asaniczka/amazon-products-dataset-2023-1-4m-products
+- Amazon UK Products Dataset 2023: https://www.kaggle.com/datasets/asaniczka/amazon-uk-products-dataset-2023
