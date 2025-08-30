@@ -1,25 +1,90 @@
 {% if hits and hits|length > 0 %}
-  <ul class="result-list">
-    {% for item in hits %}
-      <li class="result-item">
-        {% if item.image_url %}
-          <img class="thumb" src="{{ item.image_url }}" alt="" />
-        {% endif %}
-        <div class="meta">
-          <h3 class="title"><a href="{{ item.url or '#' }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></h3>
-          {% if item.category %}
-            <div class="category">{{ item.category }}</div>
-          {% endif %}
-          {% if item.description %}
-            <p class="desc">{{ item.description }}</p>
-          {% endif %}
-          {% if item.price is not none %}
-            <div class="price">${{ '%.2f'|format(item.price) }}</div>
-          {% endif %}
+  <div id="result-chooser" class="result-chooser" data-initialized="0">
+    <div class="result-row">
+      <div class="product-card" data-slot="0">
+        <img class="thumb" alt="" loading="lazy" />
+        <h3 class="title"><a href="#" target="_blank" rel="noopener noreferrer"></a></h3>
+        <div class="price"></div>
+        <div class="actions">
+          <a class="btn btn-link" href="#" target="_blank" rel="noopener noreferrer">Go to link</a>
+          <button class="btn btn-swap" type="button" data-action="swap">Swap</button>
         </div>
-      </li>
-    {% endfor %}
-  </ul>
+      </div>
+      <div class="product-card" data-slot="1">
+        <img class="thumb" alt="" loading="lazy" />
+        <h3 class="title"><a href="#" target="_blank" rel="noopener noreferrer"></a></h3>
+        <div class="price"></div>
+        <div class="actions">
+          <a class="btn btn-link" href="#" target="_blank" rel="noopener noreferrer">Go to link</a>
+          <button class="btn btn-swap" type="button" data-action="swap">Swap</button>
+        </div>
+      </div>
+      <div class="product-card" data-slot="2">
+        <img class="thumb" alt="" loading="lazy" />
+        <h3 class="title"><a href="#" target="_blank" rel="noopener noreferrer"></a></h3>
+        <div class="price"></div>
+        <div class="actions">
+          <a class="btn btn-link" href="#" target="_blank" rel="noopener noreferrer">Go to link</a>
+          <button class="btn btn-swap" type="button" data-action="swap">Swap</button>
+        </div>
+      </div>
+    </div>
+    <script type="application/json" id="hits-data">{{ hits_json | safe }}</script>
+    <script>
+      (function(){
+        function formatPrice(value){
+          if (value === null || value === undefined || value === "") return "";
+          var num = Number(value);
+          if (Number.isNaN(num)) return String(value);
+          return "$" + num.toFixed(2);
+        }
+        function renderCard(cardEl, item){
+          var img = cardEl.querySelector('.thumb');
+          if (img){ img.src = item.image_url || ''; img.alt = item.title || ''; }
+          var a = cardEl.querySelector('.title a');
+          if (a){ a.textContent = item.title || ''; a.href = item.url || '#'; }
+          var price = cardEl.querySelector('.price');
+          if (price){ price.textContent = formatPrice(item.price); }
+          var link = cardEl.querySelector('.btn-link');
+          if (link){ link.href = item.url || '#'; }
+          cardEl.dataset.itemId = item.id || '';
+        }
+        function initChooser(){
+          var root = document.getElementById('result-chooser');
+          if (!root || root.dataset.initialized === '1') return;
+          var dataScript = root.querySelector('#hits-data');
+          var all = [];
+          try { all = JSON.parse(dataScript && dataScript.textContent || '[]') || []; } catch(e) { all = []; }
+          // Fill initial three
+          var cards = Array.prototype.slice.call(root.querySelectorAll('.product-card'));
+          var ptr = 0;
+          function nextItem(){
+            if (all.length === 0) return null;
+            var item = all[ptr % all.length];
+            ptr += 1;
+            return item;
+          }
+          cards.forEach(function(card){ var it = nextItem(); if (it) renderCard(card, it); });
+          // Swap handler (delegated)
+          root.addEventListener('click', function(ev){
+            var btn = ev.target.closest('[data-action="swap"]');
+            if (!btn) return;
+            var card = btn.closest('.product-card');
+            if (!card) return;
+            var it = nextItem();
+            if (it) renderCard(card, it);
+          });
+          root.dataset.initialized = '1';
+        }
+        // Try to init immediately
+        initChooser();
+        // Also hook into htmx lifecycle to ensure init after swaps
+        if (window.htmx){
+          document.body.addEventListener('htmx:afterSettle', function(){ initChooser(); });
+        }
+      })();
+    </script>
+  </div>
 {% else %}
-  
+  <div class="empty">No results yet.</div>
 {% endif %}

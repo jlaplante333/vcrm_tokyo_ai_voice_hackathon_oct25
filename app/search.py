@@ -65,7 +65,7 @@ def ensure_index() -> None:
         pass
 
 
-def search_products(query: str, size: int = 20) -> List[Dict[str, Any]]:
+def search_products(query: str, size: int = 200) -> List[Dict[str, Any]]:
     index = get_index_name()
     response = es_client.search(
         index=index,
@@ -96,7 +96,7 @@ def search_products(query: str, size: int = 20) -> List[Dict[str, Any]]:
     return hits
 
 
-def recent_products(size: int = 20) -> List[Dict[str, Any]]:
+def recent_products(size: int = 200) -> List[Dict[str, Any]]:
     index = get_index_name()
     response = es_client.search(
         index=index,

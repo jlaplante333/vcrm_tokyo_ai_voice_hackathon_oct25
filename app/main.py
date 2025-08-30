@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from .search import es_client, ensure_index, search_products, get_index_name, recent_products
+import json
 
 
 app = FastAPI(title="nibbins")
@@ -25,8 +26,18 @@ def index(request: Request, q: str = ""):
     if q.strip():
         hits = search_products(q)
     else:
-        recent = recent_products(size=20)
-    return templates.TemplateResponse("index.html", {"request": request, "hits": hits, "recent": recent, "q": q})
+        # Show a larger set of recent items on the homepage
+        recent = recent_products(size=200)
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "hits": hits,
+            "hits_json": json.dumps(hits),
+            "recent": recent,
+            "q": q,
+        },
+    )
 
 
 @app.get("/search", response_class=HTMLResponse)
@@ -34,4 +45,7 @@ def search(request: Request, q: str = ""):
     hits = []
     if q.strip():
         hits = search_products(q)
-    return templates.TemplateResponse("_results.html", {"request": request, "hits": hits})
+    return templates.TemplateResponse(
+        "_results.html",
+        {"request": request, "hits": hits, "hits_json": json.dumps(hits)},
+    )
