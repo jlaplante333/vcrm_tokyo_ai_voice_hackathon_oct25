@@ -1,122 +1,40 @@
-# nibbins
+# CRMBLR — Voice‑Driven CRM on Elasticsearch
 
-A simple, fast, full-stack product search application built with FastAPI, HTMX, and Elasticsearch.
+CRMBLR is a split‑screen, voice‑first CRM builder. On the left is a chat interface; on the right is a dynamic panel where you can create and manage Elasticsearch documents on the fly. Voice is powered by OpenAI’s Realtime API over WebRTC, and server actions are invoked via custom function calls.
 
-This project demonstrates a modern, minimal web app that avoids a heavy frontend by leveraging server-side rendering with HTMX and full‑text search via Elasticsearch.
+Core features
+- Voice workspace: WebRTC to OpenAI Realtime with server‑generated ephemeral tokens.
+- Dynamic CRUD: Create, read, update, and delete Elasticsearch documents without fixed schemas.
+- Auth: Google Sign‑In and email/password (JWT). Protected routes for voice tokens and user info.
+- Simple stack: FastAPI, Jinja2 templates, minimal JS; Elasticsearch for storage.
 
-## Technology Stack
+Quick start
+1) Set environment variables (compose auto‑loads `.env`):
+- `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `OPENAI_API_KEY`
+- `ELASTICSEARCH_URL` (default `http://es:9200`), `ES_INDEX`, `ES_USERS_INDEX`
 
-- Backend: FastAPI (Python)
-- Frontend: HTMX with Jinja2 templates
-- Search: Elasticsearch (single-node in Docker)
-- Containerization: Docker & Docker Compose
-- Data Population: Python scraper using `requests` and Elasticsearch bulk indexing
+2) Build and run:
+```
+docker-compose up -d --build
+```
 
-## How to Run the Application
+3) Open the app:
+- Login: http://localhost:8000/login (Google or email/password)
+- Workspace: http://localhost:8000/ (Start Voice in the right panel)
 
-1. Start the services:
-   This command builds the images and starts the FastAPI backend and Elasticsearch.
+How it works
+- Backend: FastAPI serves pages and APIs (`/auth/*`, `/token`, `/me`). `/token` returns an ephemeral key for the Realtime API and requires `Authorization: Bearer <JWT>`.
+- Voice: The browser creates a `RTCPeerConnection`, adds mic audio, and exchanges SDP with OpenAI using the ephemeral key to stream and receive audio.
+- Data: Elasticsearch stores users and domain documents. Dynamic CRUD endpoints (and function call handlers) operate on runtime‑specified indices and documents.
 
-   ```bash
-   docker-compose up -d --build
-   ```
+Project layout
+- `app/`: FastAPI app (`main.py`, `auth.py`, `search.py`, `templates/`, `static/`).
+- `scraper/`: Optional ingestion utilities for sample datasets.
+- Root: `docker-compose.yml`, `Dockerfile`, `requirements.txt`.
 
-2. Populate the index:
-   Choose one of the following ingestion methods based on your data source:
+Notes
+- Kibana (optional) at `http://localhost:5601` helps inspect documents.
+- When mappings change, `docker-compose down -v` can reset local data.
 
-   **Option A: Sample Data (DummyJSON API)**
-   This fetches sample products from a public API. Good for testing and development.
-   
-   ```bash
-   docker-compose run --rm scraper
-   ```
-
-   **Option B: Amazon CSV Data**
-   If you have Amazon product data in CSV format, place it in the `data/` directory and run:
-   
-   ```bash
-   docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_amazon_csv
-   ```
-
-   **Option C: Custom JSON Data**
-   For custom JSON files in the `data/` directory:
-   
-   ```bash
-   docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_from_data
-   ```
-
-   **Option D: Excel/XLSX Files**
-   For Excel files in the `data/` directory:
-   
-   ```bash
-   docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_from_xlsx
-   ```
-
-   **Note**: You only need to run ingestion once per data source. Data persists in Elasticsearch volumes across Docker restarts.
-
-3. Access the application:
-   Open your browser at:
-   http://localhost:8001
-
-   Type in the search bar to see live results.
-
-   **Additional Services:**
-   - **Kibana** (data visualization): http://localhost:5601
-   - **Elasticsearch** (search API): http://localhost:9200
-
-## Configuration
-
-- Environment:
-  - `ELASTICSEARCH_URL` (default `http://es:9200` in Docker, `http://localhost:9200` locally)
-  - `ES_INDEX` (default `products`)
-
-## Data Management
-
-### Data Persistence
-- **Elasticsearch data persists** across Docker restarts using named volumes
-- **No need to re-ingest** data every time you start the application
-- Data is stored in the `esdata` Docker volume
-
-### Managing Data
-- **View data**: Access Kibana at `http://localhost:5601` to inspect indexed documents
-- **Clear all data**: `docker-compose down -v` (removes volumes, requires re-ingestion)
-- **Restart services**: `docker-compose restart` (preserves data)
-- **View logs**: `docker-compose logs -f web` or `docker-compose logs -f es`
-
-### Ingestion Configuration
-You can customize ingestion behavior with environment variables:
-- `BULK_CHUNK_SIZE`: Number of documents per batch (default: 500-1000)
-- `TARGET_COUNT`: Limit number of documents to ingest (default: 0 = no limit)
-- `CSV_FILE`: Path to CSV file for Amazon ingestion
-- `CHUNK_SIZE`: Batch size for CSV processing (default: 1000)
-
-## Future Implementation Plans
-
-This prototype can be extended with several features:
-
-- Improved Search Experience:
-  - Pagination for large result sets
-  - Sorting (price, relevance)
-  - Filtering (e.g., by category)
-
-- Enhanced Scraper:
-  - Multiple data sources
-  - Better error handling and logging
-  - Scheduling for freshness
-  - Incremental updates and deduplication
-
-- Production-Ready Deployment:
-  - Reverse proxy (Traefik/Nginx) and SSL
-  - Elasticsearch scaling if data/traffic demands
-  - Robust deployment strategy (e.g., Kubernetes) if needed
-
-- User Features:
-  - Authentication
-  - Saved searches and favorites
-
-## Data Sources
-
-This project uses publicly available datasets for demonstration and testing purposes. Please review and comply with each dataset's license and terms of use before redistributing or using the data commercially.
-
-- Amazon Products Dataset 2023 (1.4M products): https://www.kaggle.com/datasets/asaniczka/amazon-products-dataset-2023-1-4m-products
-- Amazon UK Products Dataset 2023: https://www.kaggle.com/datasets/asaniczka/amazon-uk-products-dataset-2023
+Contributing
+- See AGENTS.md for coding style, testing, and PR workflow.

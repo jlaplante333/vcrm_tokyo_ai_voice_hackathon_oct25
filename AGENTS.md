@@ -1,41 +1,40 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app/`: FastAPI app (`main.py`, `search.py`), Jinja2 `templates/`, static assets in `static/`.
-- `scraper/`: ingestion scripts (`ingest_from_data.py`, `ingest_from_xlsx.py`, `ingest_amazon_csv.py`, `simple_ingest.py`).
-- Root: `Dockerfile`, `Dockerfile.scraper`, `docker-compose.yml`, `requirements.txt`, `LICENSE`.
-- Tests: add under `tests/` as needed.
+- `app/`: FastAPI app for CRMBLR.
+  - `main.py`: routes (`/login`, `/auth/*`, `/`, `/token`).
+  - `auth.py`: JWT, Google ID token verify, email/password (bcrypt).
+  - `search.py`: Elasticsearch client and legacy ingestion helpers.
+  - `templates/`: Jinja2 views (`base.html`, `login.html`, `split.html`).
+  - `static/`: CSS and assets (e.g., `styles.css`).
+- `scraper/`: optional ingestion scripts for sample data.
+- Root: `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `LICENSE`.
+- Tests: add in `tests/`.
 
 ## Build, Test, and Development Commands
-- Build & start stack: `docker-compose up -d --build` (web, Elasticsearch, Kibana).
-- Seed sample JSON: `docker-compose run --rm scraper`.
-- Ingest local JSON/XLSX/CSV:
-  - `docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_from_data`
-  - `docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_from_xlsx`
-  - `docker-compose run --rm -v "$(pwd)/data:/app/data:ro" scraper python -m scraper.ingest_amazon_csv`
-- Local dev (no Compose): `ELASTICSEARCH_URL=http://localhost:9200 uvicorn app.main:app --reload`.
+- Build & start: `docker-compose up -d --build` (web, Elasticsearch, Kibana).
+- Local dev: `ELASTICSEARCH_URL=http://localhost:9200 uvicorn app.main:app --reload`.
 - Logs: `docker-compose logs -f web`; stop/clean: `docker-compose down -v`.
+- Optional ingestion: `docker-compose run --rm scraper` or run modules under `scraper/`.
 
 ## Coding Style & Naming Conventions
-- Python 3.11, PEP 8, 4‑space indent; prefer type hints for new code.
-- Names: modules/functions `snake_case`; classes `PascalCase`; constants `UPPER_SNAKE_CASE`.
-- Templates: Jinja2 with small, composable partials (e.g., `_results.html`).
+- Python 3.11, PEP 8, 4‑space indent; prefer type hints.
+- Names: functions/modules `snake_case`; classes `PascalCase`; constants `UPPER_SNAKE_CASE`.
+- Templates: small, composable partials; keep responses HTMX‑friendly.
 
 ## Testing Guidelines
-- Use `pytest` and FastAPI `TestClient`.
-- Place tests in `tests/` with filenames `test_*.py`.
-- Use a temporary index (e.g., `ES_INDEX=test_products`) and clean up after.
+- Framework: `pytest` + FastAPI `TestClient`.
+- Location: `tests/test_*.py`.
+- Use temp ES indices (e.g., `ES_INDEX=test_products`, `ES_USERS_INDEX=test_users`); clean up after.
+- Run: `pytest -q`.
 
 ## Commit & Pull Request Guidelines
-- Commits: imperative, concise, scoped (e.g., "ingest amazon csv", "widen search input").
-- PRs: include what/why, run steps, screenshots for UI, and linked issues.
-- Verify `docker-compose up -d` succeeds and data ingests before requesting review.
+- Commits: imperative, concise, scoped (e.g., "add jwt auth", "scaffold workspace").
+- PRs: describe what/why, run steps, screenshots for UI, and linked issues.
+- Verify `docker-compose up -d` succeeds and auth + workspace work before review.
 
 ## Security & Configuration Tips
-- Configure via env: `ELASTICSEARCH_URL`, `ES_INDEX`. Store secrets in `.env` (gitignored).
-- Do not commit credentials or PII. Respect dataset licenses.
-- When changing ES mappings, consider `docker-compose down -v` to reset local data.
-
-## Observability & Admin
-- Kibana at `http://localhost:5601`: create a data view `products` (time field `ingested_at`) to inspect documents.
-
+- Env vars: `ELASTICSEARCH_URL`, `ES_INDEX`, `ES_USERS_INDEX`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `OPENAI_API_KEY`. Use `.env`; never commit secrets.
+- Protected endpoints: `/token`, `/me` require `Authorization: Bearer <JWT>`.
+- Auth flows: Google (`/auth/google`) and email/password (`/auth/signup`, `/auth/login`); passwords hashed with bcrypt.
+- Changing ES mappings may require `docker-compose down -v` to reset local data.

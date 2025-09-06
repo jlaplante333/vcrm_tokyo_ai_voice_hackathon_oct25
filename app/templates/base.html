@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>nibbins</title>
+    <title>CRMBLR</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <link rel="icon" href="/static/nibbins.svg" type="image/svg+xml" />
@@ -11,10 +11,10 @@
   <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
       <div class="container">
-        <a href="/" class="brand" aria-label="nibbins home">nibbins</a>
+        <a href="/" class="brand" aria-label="CRMBLR home">CRMBLR</a>
       </div>
     </header>
-    <main class="container">
+    <main class="{% block main_class %}container{% endblock %}">
       {% block content %}{% endblock %}
     </main>
     <footer class="site-footer">
